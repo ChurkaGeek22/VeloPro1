@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#00695C">
+    <title>Скачать APK - ВелоПРО</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="manifest" href="../manifest.json">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-content">
+                <button class="icon-button" id="backBtn" aria-label="Назад">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <div class="logo">ВелоПРО</div>
+                <div style="width: 24px;"></div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="content-card">
+                <h2>Скачать приложение</h2>
+                <div class="version-info">
+                    <span class="version-label">Стабильная версия:</span>
+                    <span class="version-value" id="stableVersion">1.0.1</span>
+                </div>
+                <div class="version-info">
+                    <span class="version-label">Размер:</span>
+                    <span class="version-value" id="apkSize">~15 MB</span>
+                </div>
+                <div class="version-info">
+                    <span class="version-label">Минимальная версия Android:</span>
+                    <span class="version-value">29+</span>
+                </div>
+                <button class="btn-primary btn-block" id="downloadApkBtn">Скачать APK</button>
+                <div class="download-status" id="downloadStatus"></div>
+            </div>
+
+            <div class="content-card">
+                <h2>О приложении</h2>
+                <p>ВелоПРО - мобильное приложение для велосипедистов. Отслеживайте поездки, стройте маршруты и делитесь достижениями с друзьями.</p>
+                <p><strong>Возможности:</strong></p>
+                <ul style="margin-left: 20px; color: #666;">
+                    <li>Отслеживание дистанции и времени поездки</li>
+                    <li>Построение маршрутов</li>
+                    <li>Каталог велосипедов и аксессуаров</li>
+                    <li>Push-уведомления о новых маршрутах</li>
+                    <li>Синхронизация данных между устройствами</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/app-download.js"></script>
+</body>
+</html>

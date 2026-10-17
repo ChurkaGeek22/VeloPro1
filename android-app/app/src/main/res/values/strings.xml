@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ВелоПРО</string>
+    <string name="download_apk">Скачать APK</string>
+    <string name="app_section">Приложение</string>
+    <string name="more_section">Еще</string>
+    <string name="service_unavailable">Сервис временно недоступен</string>
+</resources>

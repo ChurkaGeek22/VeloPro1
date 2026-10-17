@@ -1,0 +1,15 @@
+{
+  "versions": [
+    {
+      "version": "1.0.1",
+      "type": "stable",
+      "downloadUrl": "http://localhost:3003/download/velopro-1.0.1.apk",
+      "size": 15728640,
+      "minSdkVersion": 29,
+      "releaseDate": "2026-10-17",
+      "description": "Первая версия приложения ВелоПРО"
+    }
+  ],
+  "maintenance": false,
+  "maintenanceMessage": "Идут технические работы\nСкоро вернемся,\nа сейчас мы вносим улучшения...\n\nЧерез некоторое время всё заработает."
+}

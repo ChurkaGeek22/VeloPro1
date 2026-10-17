@@ -1,0 +1,9 @@
+{
+  "services": {
+    "auth": { "status": "active", "uptime": 0, "requests": 0, "errors": 0 },
+    "api": { "status": "active", "uptime": 0, "requests": 0, "errors": 0 },
+    "push": { "status": "active", "uptime": 0, "requests": 0, "errors": 0 },
+    "app": { "status": "active", "uptime": 0, "requests": 0, "errors": 0 }
+  },
+  "lastUpdated": "2026-10-17T05:02:00.000Z"
+}
