@@ -10,11 +10,12 @@
     "dev": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "nanoid": "^5.0.7",
     "cors": "^2.8.5",
+    "express": "^4.19.2",
     "helmet": "^7.1.0",
-    "web-push": "^3.6.0",
-    "sql.js": "^1.10.0"
+    "jsonwebtoken": "^9.0.3",
+    "nanoid": "^5.0.7",
+    "sql.js": "^1.10.0",
+    "web-push": "^3.6.0"
   }
 }

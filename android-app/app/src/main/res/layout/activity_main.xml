@@ -1,19 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="#FFFFFF">
 
+    <!-- Primary Fullscreen WebView -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:visibility="visible" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Circular Progress Indicator with Percentage -->
+    <LinearLayout
+        android:id="@+id/progressContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="20dp"
+        android:background="#D9004D40"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/circularProgressBar"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:indeterminate="true" />
+
+        <TextView
+            android:id="@+id/progressPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="0%" />
+    </LinearLayout>
+
+    <!-- Floating Navigation Bar (Back, Refresh, Settings) -->
+    <LinearLayout
+        android:id="@+id/floatingNavBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="16dp"
+        android:orientation="horizontal"
+        android:background="#D9004D40"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:elevation="8dp">
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:background="#00695C"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:text="◀ Назад" />
+
+        <Button
+            android:id="@+id/btnRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginLeft="8dp"
+            android:background="#00695C"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:text="Обновить" />
+
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="38dp"
+            android:layout_marginLeft="8dp"
+            android:background="#00897B"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:text="⚙ Настройки" />
+    </LinearLayout>
+
+    <!-- Offline Screen: "Нет интернета" with Red Crossed-Out Cloud -->
+    <LinearLayout
+        android:id="@+id/offlineContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#FFFFFF"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <!-- Red Crossed-out Cloud Icon -->
+        <ImageView
+            android:id="@+id/imgOfflineCloud"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_cloud_off"
+            android:contentDescription="Нет интернета" />
+
+        <TextView
+            android:id="@+id/tvOfflineTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/no_internet_title"
+            android:textColor="#EF4444"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvOfflineSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:text="@string/no_internet_desc"
+            android:textColor="#757575"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/btnRetryConnection"
+            android:layout_width="220dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="28dp"
+            android:background="#EF4444"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:text="@string/btn_retry" />
+
+        <Button
+            android:id="@+id/btnOfflineSettings"
+            android:layout_width="220dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:background="#E0E0E0"
+            android:textColor="#004D40"
+            android:text="@string/btn_settings" />
+    </LinearLayout>
+
+    <!-- First Run Setup Screen -->
+    <LinearLayout
+        android:id="@+id/firstRunContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#F8FAFC"
+        android:padding="28dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ВелоПРО WebApp"
+            android:textColor="#004D40"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="При первом входе укажите стартовую страницу. Приложение будет загружать её автоматически при каждом запуске:"
+            android:textColor="#757575"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/etFirstRunUrl"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:background="#FFFFFF"
+            android:padding="14dp"
+            android:hint="http://localhost:3000"
+            android:inputType="textUri"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnFirstRunSave"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="18dp"
+            android:background="#00695C"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:text="@string/btn_save_start" />
+    </LinearLayout>
+
+</RelativeLayout>

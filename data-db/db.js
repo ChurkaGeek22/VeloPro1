@@ -1,18 +1,28 @@
 import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const DB_PATH = path.resolve(process.env.DB_PATH || path.join(process.cwd(), 'data-db', 'velopro.db'));
-
 let db = null;
 let dbInitialized = false;
 
 async function initDb() {
   if (dbInitialized) return db;
-  
-  const SQL = await initSqlJs({
-    locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.0/${file}`
-  });
+
+  const wasmPath = path.join(__dirname, 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm');
+  let SQL;
+  try {
+    SQL = await initSqlJs({
+      locateFile: () => wasmPath
+    });
+  } catch (err) {
+    // Fallback standard node initialization
+    SQL = await initSqlJs();
+  }
 
   let existingData = null;
   try {
@@ -25,8 +35,7 @@ async function initDb() {
 
   db = new SQL.Database(existingData);
 
-  // Enable WAL mode for better concurrent access
-  db.run('PRAGMA journal_mode = WAL');
+  // Enable foreign keys
   db.run('PRAGMA foreign_keys = ON');
 
   // Create tables
@@ -108,11 +117,12 @@ async function initDb() {
     );
 
     INSERT OR IGNORE INTO maintenance (id, enabled, message) VALUES (1, 0, 'Идут технические работы\nСкоро вернемся,\nа сейчас мы вносим улучшения...\n\nЧерез некоторое время всё заработает.');
+
+    INSERT OR IGNORE INTO app_versions (id, version, type, download_url, size, min_sdk_version, release_date, description)
+    VALUES ('ver_1_0_1', '1.0.1', 'stable', '/download/app-release.apk', 10007197, 29, '2026-10-17', 'Релиз ВелоПРО 1.0.1');
   `);
 
-  // Save initial state
   saveDb();
-
   dbInitialized = true;
   return db;
 }
@@ -121,13 +131,14 @@ function saveDb() {
   if (!db) return;
   try {
     const data = db.export();
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
     fs.writeFileSync(DB_PATH, Buffer.from(data));
   } catch (e) {
     console.warn('Could not save DB:', e.message);
   }
 }
 
-// Очередь операций с jitter для предотвращения потери данных при одновременных операциях
+// Очередь операций с jitter
 const operationQueue = [];
 let isProcessing = false;
 
@@ -155,7 +166,6 @@ async function processQueue() {
       reject(error);
     }
 
-    // Jitter между операциями (50-700 мс)
     if (operationQueue.length > 0) {
       await new Promise(resolve => setTimeout(resolve, getJitter()));
     }
@@ -168,21 +178,36 @@ async function processQueue() {
 function run(sql, params = []) {
   if (!db) throw new Error('Database not initialized');
   const stmt = db.prepare(sql);
-  return stmt.run(params);
+  stmt.bind(params);
+  stmt.step();
+  stmt.free();
 }
 
 // Helper to get single row
 function get(sql, params = []) {
   if (!db) throw new Error('Database not initialized');
   const stmt = db.prepare(sql);
-  return stmt.get(params);
+  stmt.bind(params);
+  if (stmt.step()) {
+    const row = stmt.getAsObject();
+    stmt.free();
+    return row;
+  }
+  stmt.free();
+  return null;
 }
 
 // Helper to get all rows
 function all(sql, params = []) {
   if (!db) throw new Error('Database not initialized');
   const stmt = db.prepare(sql);
-  return stmt.all(params);
+  stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
 }
 
 export { db, enqueue, initDb, saveDb, run, get, all };
