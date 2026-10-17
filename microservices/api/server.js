@@ -2,15 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import fetch from 'node-fetch';
-import fs from 'fs';
-import path from 'path';
+import { initDb, enqueue, get, saveDb } from '../../data-db/db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), '../../data-db'));
-const APP_VERSIONS_FILE = path.join(DATA_DIR, 'app-versions.json');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
 const PUSH_SERVICE_URL = process.env.PUSH_SERVICE_URL || 'http://localhost:3003';
 const APP_SERVICE_URL = process.env.APP_SERVICE_URL || 'http://localhost:3004';
@@ -19,16 +14,8 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-function readJsonFile(filePath, defaultValue) {
-  try {
-    if (!fs.existsSync(filePath)) return defaultValue;
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (e) {
-    console.error(`Error reading ${filePath}:`, e.message);
-    return defaultValue;
-  }
-}
+// Initialize database on startup
+initDb().catch(console.error);
 
 async function proxyRequest(serviceUrl, endpoint, options = {}) {
   try {
@@ -55,18 +42,20 @@ app.get('/health', (req, res) => {
 
 // GET /api/app/info
 app.get('/api/app/info', async (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [], maintenance: false });
-    
+  await enqueue(async () => {
+    const versionRow = get('SELECT version FROM app_versions WHERE type = ? ORDER BY created_at DESC LIMIT 1', ['stable']);
+    const maintenanceRow = get('SELECT enabled, message FROM maintenance WHERE id = 1', []);
+
     const result = await proxyRequest(AUTH_SERVICE_URL, '/api/service/auth/status');
-    
-    res.json({
+
+    return res.json({
       success: true,
       data: {
         app: {
           name: 'ВелоПРО',
-          version: versionsData.versions.length > 0 ? versionsData.versions[0].version : '1.0.1',
-          maintenance: versionsData.maintenance || false
+          version: versionRow ? versionRow.version : '1.0.1',
+          maintenance: Boolean(maintenanceRow?.enabled),
+          maintenanceMessage: maintenanceRow?.message || null
         },
         services: {
           auth: result.status === 200 ? 'active' : 'unavailable'
@@ -74,36 +63,23 @@ app.get('/api/app/info', async (req, res) => {
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // GET /api/app/version
-app.get('/api/app/version', (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [] });
-    const stableVersion = versionsData.versions.find(v => v.type === 'stable');
-    
-    res.json({
+app.get('/api/app/version', async (req, res) => {
+  await enqueue(async () => {
+    const versionRow = get('SELECT version, type FROM app_versions WHERE type = ? ORDER BY created_at DESC LIMIT 1', ['stable']);
+
+    return res.json({
       success: true,
       data: {
-        version: stableVersion ? stableVersion.version : '1.0.1',
-        type: stableVersion ? stableVersion.type : 'stable'
+        version: versionRow ? versionRow.version : '1.0.1',
+        type: versionRow ? versionRow.type : 'stable'
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // Proxy to auth service

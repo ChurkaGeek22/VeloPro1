@@ -87,13 +87,13 @@ html, body {
     display: block;
 }
 
+.page.hidden {
+    display: none;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-.page.hidden {
-    display: none;
 }
 
 .page-header {
@@ -141,6 +141,67 @@ html, body {
     margin-bottom: 16px;
 }
 
+/* Form styles */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #00695C;
+    box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1);
+}
+
+.form-error {
+    color: #d32f2f;
+    font-size: 14px;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.form-footer {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.form-footer span {
+    margin-right: 8px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #00695C;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: #004D40;
+}
+
 .btn-primary {
     background-color: #00695C;
     color: white;
@@ -160,6 +221,12 @@ html, body {
 
 .btn-primary:active {
     transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    background-color: #bdbdbd;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .btn-outline {
@@ -313,10 +380,52 @@ html, body {
     color: #333;
 }
 
-.profile-email {
+.profile-phone {
     font-size: 14px;
     color: #666;
     margin-top: 4px;
+}
+
+.profile-wallet {
+    font-size: 14px;
+    color: #00695C;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.bike-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bike-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bike-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.bike-info p {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.bike-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #00695C;
 }
 
 .bottom-nav {

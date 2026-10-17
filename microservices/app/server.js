@@ -1,38 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import fs from 'fs';
-import path from 'path';
+import { initDb, enqueue, get, saveDb } from '../../data-db/db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3004;
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), '../../data-db'));
-const APP_VERSIONS_FILE = path.join(DATA_DIR, 'app-versions.json');
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-function readJsonFile(filePath, defaultValue) {
-  try {
-    if (!fs.existsSync(filePath)) return defaultValue;
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (e) {
-    console.error(`Error reading ${filePath}:`, e.message);
-    return defaultValue;
-  }
-}
-
-function writeJsonFile(filePath, data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    return true;
-  } catch (e) {
-    console.error(`Error writing ${filePath}:`, e.message);
-    return false;
-  }
-}
+// Initialize database on startup
+initDb().catch(console.error);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -40,58 +19,46 @@ app.get('/health', (req, res) => {
 });
 
 // GET /api/app/versions
-app.get('/api/app/versions', (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [], maintenance: false });
-    res.json({
+app.get('/api/app/versions', async (req, res) => {
+  await enqueue(async () => {
+    const versions = all('SELECT * FROM app_versions ORDER BY created_at DESC', []);
+    const maintenance = get('SELECT enabled, message FROM maintenance WHERE id = 1', []);
+
+    return res.json({
       success: true,
       data: {
-        versions: versionsData.versions,
-        maintenance: versionsData.maintenance || false,
-        maintenanceMessage: versionsData.maintenanceMessage || null
+        versions,
+        maintenance: Boolean(maintenance?.enabled),
+        maintenanceMessage: maintenance?.message || null
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // GET /api/app/version
-app.get('/api/app/version', (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [] });
-    const stableVersion = versionsData.versions.find(v => v.type === 'stable');
-    
-    res.json({
+app.get('/api/app/version', async (req, res) => {
+  await enqueue(async () => {
+    const versionRow = get('SELECT version, type, download_url FROM app_versions WHERE type = ? ORDER BY created_at DESC LIMIT 1', ['stable']);
+
+    return res.json({
       success: true,
       data: {
-        version: stableVersion ? stableVersion.version : '1.0.1',
-        type: stableVersion ? stableVersion.type : 'stable',
-        downloadUrl: stableVersion ? stableVersion.downloadUrl : null
+        version: versionRow ? versionRow.version : '1.0.1',
+        type: versionRow ? versionRow.type : 'stable',
+        downloadUrl: versionRow ? versionRow.download_url : null
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // GET /api/app/download/stable
-app.get('/api/app/download/stable', (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [] });
-    const stableVersion = versionsData.versions.find(v => v.type === 'stable');
+app.get('/api/app/download/stable', async (req, res) => {
+  await enqueue(async () => {
+    const versionRow = get('SELECT * FROM app_versions WHERE type = ? ORDER BY created_at DESC LIMIT 1', ['stable']);
 
-    if (!stableVersion) {
+    if (!versionRow) {
       return res.status(404).json({
         success: false,
         data: null,
@@ -99,47 +66,36 @@ app.get('/api/app/download/stable', (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: {
-        version: stableVersion.version,
-        downloadUrl: stableVersion.downloadUrl,
-        size: stableVersion.size,
-        minSdkVersion: stableVersion.minSdkVersion
+        version: versionRow.version,
+        downloadUrl: versionRow.download_url,
+        size: versionRow.size,
+        minSdkVersion: versionRow.min_sdk_version
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // GET /api/app/status
-app.get('/api/app/status', (req, res) => {
-  try {
-    const versionsData = readJsonFile(APP_VERSIONS_FILE, { versions: [], maintenance: false });
-    res.json({
+app.get('/api/app/status', async (req, res) => {
+  await enqueue(async () => {
+    const maintenance = get('SELECT enabled, message FROM maintenance WHERE id = 1', []);
+
+    return res.json({
       success: true,
       data: {
-        status: versionsData.maintenance ? 'maintenance' : 'active',
-        maintenance: versionsData.maintenance || false,
-        maintenanceMessage: versionsData.maintenanceMessage || null,
+        status: maintenance?.enabled ? 'maintenance' : 'active',
+        maintenance: Boolean(maintenance?.enabled),
+        maintenanceMessage: maintenance?.message || null,
         service: 'app',
         uptime: process.uptime()
       },
       error: null
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // Service status endpoint

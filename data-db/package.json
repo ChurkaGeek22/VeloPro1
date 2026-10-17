@@ -1,0 +1,11 @@
+{
+  "name": "velopro-db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Общая SQLite база данных для микросервисов ВелоПРО",
+  "main": "db.js",
+  "dependencies": {
+    "sql.js": "^1.10.0"
+  }
+}

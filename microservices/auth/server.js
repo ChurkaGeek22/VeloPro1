@@ -4,58 +4,42 @@ import helmet from 'helmet';
 import { nanoid } from 'nanoid';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import fs from 'fs';
-import path from 'path';
+import { initDb, enqueue, run, get, all, saveDb } from '../../data-db/db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'velopro-secret-key-change-in-production';
-const DATA_DIR = path.resolve(process.env.DATA_DIR || path.join(process.cwd(), '../../data-db'));
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+// Initialize database on startup
+initDb().catch(console.error);
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ success: true, data: { status: 'active', service: 'auth' }, error: null });
 });
 
-// Read JSON file helper
-function readJsonFile(filePath, defaultValue) {
-  try {
-    if (!fs.existsSync(filePath)) return defaultValue;
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (e) {
-    console.error(`Error reading ${filePath}:`, e.message);
-    return defaultValue;
-  }
-}
-
-// Write JSON file helper
-function writeJsonFile(filePath, data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    return true;
-  } catch (e) {
-    console.error(`Error writing ${filePath}:`, e.message);
-    return false;
-  }
-}
-
-// POST /api/auth/register
+// POST /api/auth/register — регистрация по номеру телефона
 app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
+  await enqueue(async () => {
+    const { phone, password, name } = req.body;
 
-    if (!email || !password) {
+    if (!phone || !password) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'Email и пароль обязательны' }
+        error: { code: 'VALIDATION_ERROR', message: 'Номер телефона и пароль обязательны' }
+      });
+    }
+
+    if (!/^8\d{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: { code: 'VALIDATION_ERROR', message: 'Номер телефона должен быть в формате 8XXXXXXXXXX' }
       });
     }
 
@@ -67,183 +51,160 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    const usersData = readJsonFile(USERS_FILE, { users: [], nextId: 1 });
-
-    const existingUser = usersData.users.find(u => u.email === email);
+    const existingUser = get('SELECT id FROM users WHERE phone = ?', [phone]);
     if (existingUser) {
       return res.status(409).json({
         success: false,
         data: null,
-        error: { code: 'USER_EXISTS', message: 'Пользователь с таким email уже существует' }
+        error: { code: 'USER_EXISTS', message: 'Пользователь с таким номером телефона уже существует' }
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = nanoid();
+    const now = new Date().toISOString();
 
-    const user = {
-      id: userId,
-      email,
-      name: name || email.split('@')[0],
-      password: hashedPassword,
-      createdAt: new Date().toISOString()
-    };
+    run('INSERT INTO users (id, phone, name, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, phone, name || phone, hashedPassword, now, now]);
 
-    usersData.users.push(user);
-    writeJsonFile(USERS_FILE, usersData);
+    const token = jwt.sign({ userId, phone }, JWT_SECRET, { expiresIn: '7d' });
 
-    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' });
+    run('INSERT INTO sessions (id, user_id, token, device_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [nanoid(), userId, token, req.headers['x-device-id'] || null, now, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()]);
 
-    res.status(201).json({
+    saveDb();
+
+    return res.status(201).json({
       success: true,
       data: {
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: userId, phone, name: name || phone },
         token
       },
       error: null
     });
-  } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера при регистрации' }
-    });
-  }
+  });
 });
 
-// POST /api/auth/login
+// POST /api/auth/login — вход по номеру телефона
 app.post('/api/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  await enqueue(async () => {
+    const { phone, password } = req.body;
 
-    if (!email || !password) {
+    if (!phone || !password) {
       return res.status(400).json({
         success: false,
         data: null,
-        error: { code: 'VALIDATION_ERROR', message: 'Email и пароль обязательны' }
+        error: { code: 'VALIDATION_ERROR', message: 'Номер телефона и пароль обязательны' }
       });
     }
 
-    const usersData = readJsonFile(USERS_FILE, { users: [], nextId: 1 });
-    const user = usersData.users.find(u => u.email === email);
-
+    const user = get('SELECT * FROM users WHERE phone = ?', [phone]);
     if (!user) {
       return res.status(401).json({
         success: false,
         data: null,
-        error: { code: 'INVALID_CREDENTIALS', message: 'Неверный email или пароль' }
+        error: { code: 'INVALID_CREDENTIALS', message: 'Неверный номер телефона или пароль' }
       });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password_hash);
     if (!isValid) {
       return res.status(401).json({
         success: false,
         data: null,
-        error: { code: 'INVALID_CREDENTIALS', message: 'Неверный email или пароль' }
+        error: { code: 'INVALID_CREDENTIALS', message: 'Неверный номер телефона или пароль' }
       });
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '7d' });
+    const now = new Date().toISOString();
 
-    // Save session
-    const sessionsData = readJsonFile(SESSIONS_FILE, { sessions: [] });
-    sessionsData.sessions.push({
-      userId: user.id,
-      token,
-      createdAt: new Date().toISOString()
-    });
-    writeJsonFile(SESSIONS_FILE, sessionsData);
+    run('INSERT INTO sessions (id, user_id, token, device_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [nanoid(), user.id, token, req.headers['x-device-id'] || null, now, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()]);
 
-    res.json({
+    saveDb();
+
+    return res.json({
       success: true,
       data: {
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, phone: user.phone, name: user.name },
         token
       },
       error: null
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера при входе' }
-    });
-  }
+  });
 });
 
 // POST /api/auth/logout
-app.post('/api/auth/logout', (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      const sessionsData = readJsonFile(SESSIONS_FILE, { sessions: [] });
-      sessionsData.sessions = sessionsData.sessions.filter(s => s.token !== token);
-      writeJsonFile(SESSIONS_FILE, sessionsData);
+app.post('/api/auth/logout', async (req, res) => {
+  await enqueue(async () => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        run('DELETE FROM sessions WHERE token = ?', [token]);
+        saveDb();
+      }
+      return res.json({ success: true, data: { message: 'Выход выполнен' }, error: null });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        data: null,
+        error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера при выходе' }
+      });
     }
-    res.json({ success: true, data: { message: 'Выход выполнен' }, error: null });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера при выходе' }
-    });
-  }
+  });
 });
 
 // GET /api/auth/me
-app.get('/api/auth/me', (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        data: null,
-        error: { code: 'UNAUTHORIZED', message: 'Токен авторизации не предоставлен' }
-      });
-    }
-
-    const token = authHeader.substring(7);
-    let decoded;
+app.get('/api/auth/me', async (req, res) => {
+  await enqueue(async () => {
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (e) {
-      return res.status(401).json({
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'UNAUTHORIZED', message: 'Токен авторизации не предоставлен' }
+        });
+      }
+
+      const token = authHeader.substring(7);
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (e) {
+        return res.status(401).json({
+          success: false,
+          data: null,
+          error: { code: 'INVALID_TOKEN', message: 'Недействительный токен' }
+        });
+      }
+
+      const user = get('SELECT id, phone, name, wallet_balance FROM users WHERE id = ?', [decoded.userId]);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          data: null,
+          error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' }
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          user: { id: user.id, phone: user.phone, name: user.name, wallet_balance: user.wallet_balance }
+        },
+        error: null
+      });
+    } catch (error) {
+      return res.status(500).json({
         success: false,
         data: null,
-        error: { code: 'INVALID_TOKEN', message: 'Недействительный токен' }
+        error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
       });
     }
-
-    const usersData = readJsonFile(USERS_FILE, { users: [], nextId: 1 });
-    const user = usersData.users.find(u => u.id === decoded.userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' }
-      });
-    }
-
-    res.json({
-      success: true,
-      data: {
-        user: { id: user.id, email: user.email, name: user.name }
-      },
-      error: null
-    });
-  } catch (error) {
-    console.error('Me error:', error);
-    res.status(500).json({
-      success: false,
-      data: null,
-      error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
-    });
-  }
+  });
 });
 
 // Service status endpoint
