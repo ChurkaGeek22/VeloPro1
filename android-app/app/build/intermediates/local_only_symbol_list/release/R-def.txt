@@ -1,0 +1,20 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color colorAccent
+color colorPrimary
+color colorPrimaryDark
+color gray
+color lightGray
+color white
+drawable ic_launcher_foreground
+id webView
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+string app_section
+string download_apk
+string more_section
+string service_unavailable
+style AppTheme
