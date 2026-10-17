@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
         return "dev_" + System.currentTimeMillis() + "_" + (int)(Math.random() * 10000);
     }
 
-    public String getDeviceId() {
+    public String getAppDeviceId() {
         return deviceId;
     }
 
@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
         webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webSettings.setAppCacheEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setAllowContentAccess(true);
         webSettings.setAllowUniversalAccessFromFileURLs(true);
@@ -158,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
         @android.webkit.JavascriptInterface
         public String getDeviceId() {
-            return activity.getDeviceId();
+            return activity.getAppDeviceId();
         }
 
         @android.webkit.JavascriptInterface

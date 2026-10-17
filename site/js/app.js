@@ -7,10 +7,15 @@ const VeloApp = (function() {
         catalogPage: document.getElementById('catalogPage'),
         profilePage: document.getElementById('profilePage'),
         morePage: document.getElementById('morePage'),
-        appSectionPage: document.getElementById('appSectionPage')
+        appSectionPage: document.getElementById('appSectionPage'),
+        loginPage: document.getElementById('loginPage'),
+        registerPage: document.getElementById('registerPage')
     };
     
     const navItems = document.querySelectorAll('.nav-item');
+    
+    // Страницы, требующие авторизации
+    const protectedPages = ['profilePage', 'appSectionPage'];
     
     function init() {
         setupNavigation();
@@ -29,6 +34,26 @@ const VeloApp = (function() {
         if (typeof VeloPush !== 'undefined') {
             VeloPush.init().catch(() => {});
         }
+        
+        // Check auth on init
+        checkAuth();
+    }
+    
+    function checkAuth() {
+        const isAuth = VeloStorage.isAuthenticated();
+        const currentPath = window.location.pathname;
+        
+        // Если не авторизован и пытаемся открыть защищенную страницу — редирект на логин
+        if (!isAuth && currentPage !== 'loginPage' && protectedPages.includes(currentPage)) {
+            navigateTo('loginPage');
+        }
+        
+        // Если авторизован и на странице логина — редирект на профиль
+        if (isAuth && currentPage === 'loginPage') {
+            navigateTo('profilePage');
+        }
+        
+        updateAuthUI(isAuth);
     }
     
     function setupNavigation() {
@@ -36,6 +61,13 @@ const VeloApp = (function() {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const pageId = item.getAttribute('data-page');
+                
+                // Проверка авторизации для защищенных страниц
+                if (protectedPages.includes(pageId) && !VeloStorage.isAuthenticated()) {
+                    navigateTo('loginPage');
+                    return;
+                }
+                
                 navigateTo(pageId);
                 
                 navItems.forEach(nav => nav.classList.remove('active'));
@@ -46,8 +78,10 @@ const VeloApp = (function() {
     
     function navigateTo(pageId) {
         Object.values(pages).forEach(page => {
-            page.classList.remove('active');
-            page.classList.add('hidden');
+            if (page) {
+                page.classList.remove('active');
+                page.classList.add('hidden');
+            }
         });
         
         if (pages[pageId]) {
@@ -110,11 +144,13 @@ const VeloApp = (function() {
                 const stableVersion = document.getElementById('stableVersion');
                 const currentVersion = document.getElementById('currentVersion');
                 
-                if (stableVersion && result.data.stable) {
-                    stableVersion.textContent = result.data.stable.version || '1.0.1';
+                if (stableVersion && result.data.versions) {
+                    const stable = result.data.versions.find(v => v.type === 'stable');
+                    if (stable) stableVersion.textContent = stable.version;
                 }
-                if (currentVersion && result.data.current) {
-                    currentVersion.textContent = result.data.current.version || '1.0.1';
+                if (currentVersion && result.data.versions) {
+                    const stable = result.data.versions.find(v => v.type === 'stable');
+                    if (stable) currentVersion.textContent = stable.version;
                 }
             }
         } catch (error) {
@@ -123,29 +159,51 @@ const VeloApp = (function() {
     }
     
     function setupAuth() {
-        const loginBtn = document.getElementById('loginBtn');
+        const loginForm = document.getElementById('loginForm');
         const logoutBtn = document.getElementById('logoutBtn');
         const profileName = document.getElementById('profileName');
-        const profileEmail = document.getElementById('profileEmail');
+        const profilePhone = document.getElementById('profilePhone');
+        const profileWallet = document.getElementById('profileWallet');
+        const loginLink = document.getElementById('loginLink');
+        const registerLink = document.getElementById('registerLink');
+        const backToHome = document.getElementById('backToHome');
         
-        if (loginBtn) {
-            loginBtn.addEventListener('click', async () => {
-                const email = prompt('Введите email:');
-                if (!email) return;
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
                 
-                const password = prompt('Введите пароль:');
-                if (!password) return;
+                const phoneInput = document.getElementById('loginPhone');
+                const passwordInput = document.getElementById('loginPassword');
+                const loginError = document.getElementById('loginError');
+                
+                if (!phoneInput || !passwordInput) return;
+                
+                const phone = phoneInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                if (!phone || !password) {
+                    if (loginError) loginError.textContent = 'Заполните все поля';
+                    return;
+                }
+                
+                if (!/^8\d{10}$/.test(phone)) {
+                    if (loginError) loginError.textContent = 'Номер должен быть в формате 8XXXXXXXXXX';
+                    return;
+                }
                 
                 try {
-                    const result = await VeloAPI.login({ email, password });
+                    const result = await VeloAPI.login({ phone, password });
                     if (result.success) {
                         VeloStorage.setUserId(result.data.user.id);
                         VeloStorage.setSessionToken(result.data.token);
                         updateAuthUI(true, result.data.user);
-                        AndroidBridge.showToast('Вход выполнен');
+                        navigateTo('profilePage');
+                        if (loginError) loginError.textContent = '';
+                        phoneInput.value = '';
+                        passwordInput.value = '';
                     }
                 } catch (error) {
-                    alert('Ошибка входа: ' + error.message);
+                    if (loginError) loginError.textContent = error.message || 'Ошибка входа';
                 }
             });
         }
@@ -157,7 +215,99 @@ const VeloApp = (function() {
                 } catch (e) {}
                 VeloStorage.clearAuth();
                 updateAuthUI(false);
-                AndroidBridge.showToast('Вы вышли');
+                navigateTo('homePage');
+            });
+        }
+        
+        if (loginLink) {
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('loginPage');
+            });
+        }
+        
+        if (registerLink) {
+            registerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('registerPage');
+            });
+        }
+
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const nameInput = document.getElementById('registerName');
+                const phoneInput = document.getElementById('registerPhone');
+                const passwordInput = document.getElementById('registerPassword');
+                const confirmPasswordInput = document.getElementById('registerConfirmPassword');
+                const registerError = document.getElementById('registerError');
+
+                if (!nameInput || !phoneInput || !passwordInput || !confirmPasswordInput) return;
+
+                const name = nameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const password = passwordInput.value.trim();
+                const confirmPassword = confirmPasswordInput.value.trim();
+
+                if (!name || !phone || !password || !confirmPassword) {
+                    if (registerError) registerError.textContent = 'Заполните все поля';
+                    return;
+                }
+
+                if (!/^8\d{10}$/.test(phone)) {
+                    if (registerError) registerError.textContent = 'Номер должен быть в формате 8XXXXXXXXXX';
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    if (registerError) registerError.textContent = 'Пароли не совпадают';
+                    return;
+                }
+
+                if (password.length < 6) {
+                    if (registerError) registerError.textContent = 'Пароль должен быть не менее 6 символов';
+                    return;
+                }
+
+                try {
+                    const result = await VeloAPI.register({ name, phone, password });
+                    if (result.success) {
+                        VeloStorage.setUserId(result.data.user.id);
+                        VeloStorage.setSessionToken(result.data.token);
+                        updateAuthUI(true, result.data.user);
+                        navigateTo('profilePage');
+                        if (registerError) registerError.textContent = '';
+                        nameInput.value = '';
+                        phoneInput.value = '';
+                        passwordInput.value = '';
+                        confirmPasswordInput.value = '';
+                    }
+                } catch (error) {
+                    if (registerError) registerError.textContent = error.message || 'Ошибка регистрации';
+                }
+            });
+        }
+
+        const backToHomeFromRegister = document.getElementById('backToHomeFromRegister');
+        if (backToHomeFromRegister) {
+            backToHomeFromRegister.addEventListener('click', () => {
+                navigateTo('homePage');
+            });
+        }
+
+        const loginLinkFromRegister = document.getElementById('loginLinkFromRegister');
+        if (loginLinkFromRegister) {
+            loginLinkFromRegister.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('loginPage');
+            });
+        }
+        
+        if (backToHome) {
+            backToHome.addEventListener('click', () => {
+                navigateTo('homePage');
             });
         }
         
@@ -168,18 +318,27 @@ const VeloApp = (function() {
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const profileName = document.getElementById('profileName');
-        const profileEmail = document.getElementById('profileEmail');
+        const profilePhone = document.getElementById('profilePhone');
+        const profileWallet = document.getElementById('profileWallet');
+        const loginLink = document.getElementById('loginLink');
+        const navProfile = document.getElementById('navProfile');
         
         if (authenticated && user) {
             if (loginBtn) loginBtn.style.display = 'none';
             if (logoutBtn) logoutBtn.style.display = 'block';
+            if (loginLink) loginLink.style.display = 'none';
+            if (navProfile) navProfile.classList.remove('hidden');
             if (profileName) profileName.textContent = user.name || 'Пользователь';
-            if (profileEmail) profileEmail.textContent = user.email || '';
+            if (profilePhone) profilePhone.textContent = user.phone || '';
+            if (profileWallet) profileWallet.textContent = (user.wallet_balance || 0) + ' ₽';
         } else {
             if (loginBtn) loginBtn.style.display = 'block';
             if (logoutBtn) logoutBtn.style.display = 'none';
+            if (loginLink) loginLink.style.display = 'block';
+            if (navProfile) navProfile.classList.add('hidden');
             if (profileName) profileName.textContent = 'Гость';
-            if (profileEmail) profileEmail.textContent = 'Не авторизован';
+            if (profilePhone) profilePhone.textContent = '';
+            if (profileWallet) profileWallet.textContent = '0 ₽';
         }
     }
     
@@ -187,7 +346,7 @@ const VeloApp = (function() {
         try {
             const result = await VeloAPI.getServiceStatus('app');
             if (result.success && result.data.maintenance) {
-                showMaintenanceMode(result.data.message);
+                showMaintenanceMode(result.data.maintenanceMessage);
             }
         } catch (error) {
             // Service may be unavailable, continue without maintenance check
@@ -198,15 +357,15 @@ const VeloApp = (function() {
         isMaintenanceMode = true;
         const appMain = document.querySelector('.app-main');
         if (appMain) {
+            const lines = message.split('\n');
+            const htmlLines = lines.map(line => `<div style="margin: 8px 0;">${line}</div>`).join('');
             appMain.innerHTML = `
                 <div class="maintenance-container" style="text-align:center; padding: 40px 20px;">
                     <div style="font-size: 48px; margin-bottom: 20px;">🔧</div>
                     <h1 style="color: #00695C; font-size: 24px; margin-bottom: 16px;">Идут технические работы</h1>
-                    <p style="color: #666; font-size: 16px; line-height: 1.5; max-width: 300px; margin: 0 auto;">
-                        Скоро вернемся,<br>
-                        а сейчас мы вносим улучшения...<br><br>
-                        Через некоторое время всё заработает.
-                    </p>
+                    <div style="color: #666; font-size: 16px; line-height: 1.5; max-width: 300px; margin: 0 auto;">
+                        ${htmlLines}
+                    </div>
                 </div>
             `;
         }
@@ -232,7 +391,8 @@ const VeloApp = (function() {
     return {
         init,
         navigateTo,
-        showMaintenanceMode
+        showMaintenanceMode,
+        checkAuth
     };
 })();
 
