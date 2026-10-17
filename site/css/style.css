@@ -1,16 +1,22 @@
+/* ============================================
+   VeloPro Design System — Liquid Glass
+   Основано на sceneai.art, liquid-glass, construct/material
+   ============================================ */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f5f5f5;
-    -webkit-tap-highlight-color: transparent;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #0A0A0F;
+    color: #E7E7EA;
 }
 
 .app-container {
@@ -20,19 +26,23 @@ html, body {
     width: 100%;
     max-width: 500px;
     margin: 0 auto;
-    background-color: #ffffff;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background: #0A0A0F;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
 }
+
+/* ===== Header ===== */
 
 .app-header {
     height: 56px;
-    background-color: #00695C;
-    color: white;
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #E7E7EA;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 100;
 }
 
@@ -47,6 +57,7 @@ html, body {
     font-size: 20px;
     font-weight: 700;
     letter-spacing: 0.5px;
+    color: #00BF96;
 }
 
 .header-actions {
@@ -55,32 +66,40 @@ html, body {
 }
 
 .icon-button {
-    background: none;
-    border: none;
-    color: white;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #E7E7EA;
     cursor: pointer;
     padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
 .icon-button:hover {
-    background-color: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 191, 150, 0.3);
+    transform: translateY(-1px);
 }
+
+.icon-button:active {
+    transform: scale(0.95);
+}
+
+/* ===== Main ===== */
 
 .app-main {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    background-color: #f5f5f5;
+    background: #0A0A0F;
 }
 
 .page {
     display: none;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.25s ease;
 }
 
 .page.active {
@@ -92,56 +111,76 @@ html, body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== Page Header ===== */
 
 .page-header {
     display: flex;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .back-btn {
     background: none;
     border: none;
     font-size: 24px;
-    color: #00695C;
+    color: #00BF96;
     cursor: pointer;
     margin-right: 12px;
     padding: 4px;
     line-height: 1;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(0, 191, 150, 0.1);
 }
 
 .page-header h1 {
     font-size: 20px;
     font-weight: 600;
-    color: #333;
+    color: #E7E7EA;
 }
 
+/* ===== Content Card (Glass) ===== */
+
 .content-card {
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    background: rgba(22, 22, 29, 0.7);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.content-card:hover {
+    border-color: rgba(0, 191, 150, 0.2);
+    transform: translateY(-1px);
 }
 
 .content-card h2 {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #E7E7EA;
     margin-bottom: 12px;
 }
 
 .content-card p {
     font-size: 14px;
-    color: #666;
+    color: #A0A0AB;
     line-height: 1.5;
     margin-bottom: 16px;
 }
 
-/* Form styles */
+/* ===== Forms ===== */
+
 .form-group {
     margin-bottom: 16px;
 }
@@ -150,38 +189,44 @@ html, body {
     display: block;
     font-size: 14px;
     font-weight: 500;
-    color: #333;
+    color: #A0A0AB;
     margin-bottom: 8px;
 }
 
 .form-input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 16px;
     font-size: 16px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    color: #E7E7EA;
+    transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+    color: #666666;
 }
 
 .form-input:focus {
     outline: none;
     border-color: #00695C;
     box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.1);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .form-error {
-    color: #d32f2f;
+    color: #EF4444;
     font-size: 14px;
     margin-top: 8px;
     min-height: 20px;
 }
 
 .form-footer {
-    margin-top: 16px;
+    margin-top: 20px;
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: #A0A0AB;
 }
 
 .form-footer span {
@@ -191,32 +236,40 @@ html, body {
 .btn-link {
     background: none;
     border: none;
-    color: #00695C;
+    color: #00BF96;
     font-size: 14px;
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
     padding: 0;
+    border-radius: 8px;
+    transition: all 0.2s;
 }
 
 .btn-link:hover {
-    color: #004D40;
+    color: #00695C;
+    background: rgba(0, 105, 92, 0.1);
 }
 
+/* ===== Buttons ===== */
+
 .btn-primary {
-    background-color: #00695C;
-    color: white;
+    background: #00695C;
+    color: #FFFFFF;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 14px 20px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
     width: 100%;
+    min-height: 44px;
 }
 
 .btn-primary:hover {
-    background-color: #004D40;
+    background: #004D40;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 105, 92, 0.3);
 }
 
 .btn-primary:active {
@@ -224,59 +277,69 @@ html, body {
 }
 
 .btn-primary:disabled {
-    background-color: #bdbdbd;
+    background: #333333;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 .btn-outline {
-    background-color: transparent;
-    color: #00695C;
-    border: 1px solid #00695C;
-    border-radius: 8px;
+    background: transparent;
+    color: #00BF96;
+    border: 1px solid #00BF96;
+    border-radius: 12px;
     padding: 14px 20px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 12px;
+    min-height: 44px;
 }
 
 .btn-outline:hover {
-    background-color: rgba(0,105,92,0.1);
+    background: rgba(0, 191, 150, 0.1);
+    border-color: #00695C;
 }
 
 .btn-block {
     width: 100%;
 }
 
+/* ===== Stats ===== */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .stat-card {
-    background: white;
+    background: rgba(22, 22, 29, 0.7);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     padding: 16px;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .stat-value {
     font-size: 24px;
     font-weight: 700;
-    color: #00695C;
+    color: #00BF96;
 }
 
 .stat-label {
     font-size: 12px;
-    color: #666;
+    color: #A0A0AB;
     margin-top: 4px;
 }
+
+/* ===== Menu List ===== */
 
 .menu-list {
     display: flex;
@@ -288,11 +351,11 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px;
-    background: white;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 16px 20px;
+    background: rgba(22, 22, 29, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .menu-item:last-child {
@@ -300,7 +363,8 @@ html, body {
 }
 
 .menu-item:hover {
-    background-color: #f9f9f9;
+    background: rgba(0, 105, 92, 0.1);
+    border-color: rgba(0, 191, 150, 0.2);
 }
 
 .menu-icon {
@@ -311,20 +375,22 @@ html, body {
 .menu-text {
     flex: 1;
     font-size: 16px;
-    color: #333;
+    color: #E7E7EA;
     font-weight: 500;
 }
 
 .menu-arrow {
     font-size: 18px;
-    color: #999;
+    color: #666666;
 }
+
+/* ===== Version Info ===== */
 
 .version-info {
     display: flex;
     justify-content: space-between;
     padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .version-info:last-child {
@@ -333,22 +399,24 @@ html, body {
 
 .version-label {
     font-size: 14px;
-    color: #666;
+    color: #A0A0AB;
 }
 
 .version-value {
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: #E7E7EA;
 }
 
 .download-status {
     margin-top: 12px;
     font-size: 14px;
-    color: #00695C;
+    color: #00BF96;
     font-weight: 500;
     min-height: 20px;
 }
+
+/* ===== Profile ===== */
 
 .profile-info {
     display: flex;
@@ -361,13 +429,14 @@ html, body {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background-color: #00695C;
+    background: linear-gradient(135deg, #00695C, #00BF96);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 105, 92, 0.3);
 }
 
 .profile-details {
@@ -377,21 +446,23 @@ html, body {
 .profile-name {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #E7E7EA;
 }
 
 .profile-phone {
     font-size: 14px;
-    color: #666;
+    color: #A0A0AB;
     margin-top: 4px;
 }
 
 .profile-wallet {
     font-size: 14px;
-    color: #00695C;
+    color: #00BF96;
     font-weight: 600;
     margin-top: 4px;
 }
+
+/* ===== Bike List ===== */
 
 .bike-list {
     display: flex;
@@ -400,38 +471,51 @@ html, body {
 }
 
 .bike-card {
-    background: white;
+    background: rgba(22, 22, 29, 0.7);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.2s ease;
+}
+
+.bike-card:hover {
+    border-color: rgba(0, 191, 150, 0.2);
+    transform: translateY(-1px);
 }
 
 .bike-info h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: #E7E7EA;
     margin-bottom: 4px;
 }
 
 .bike-info p {
     font-size: 14px;
-    color: #666;
+    color: #A0A0AB;
     margin: 0;
 }
 
 .bike-price {
     font-size: 18px;
     font-weight: 700;
-    color: #00695C;
+    color: #00BF96;
 }
+
+/* ===== Bottom Navigation ===== */
 
 .bottom-nav {
     height: 64px;
-    background-color: white;
-    border-top: 1px solid #e0e0e0;
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -441,7 +525,7 @@ html, body {
     transform: translateX(-50%);
     width: 100%;
     max-width: 500px;
-    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
     z-index: 100;
 }
 
@@ -451,29 +535,63 @@ html, body {
     align-items: center;
     justify-content: center;
     width: 25%;
-    color: #999;
+    color: #666666;
     text-decoration: none;
     font-size: 12px;
     font-weight: 500;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .nav-item.active {
-    color: #00695C;
+    color: #00BF96;
 }
 
 .nav-item svg {
     margin-bottom: 4px;
+    width: 24px;
+    height: 24px;
 }
+
+/* ===== Responsive ===== */
 
 @media (max-width: 480px) {
     .app-container {
         max-width: 100%;
     }
-    
+
     .bottom-nav {
         width: 100%;
         left: 0;
         transform: none;
     }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .content-card {
+        padding: 16px;
+    }
+}
+
+/* ===== Maintenance Mode ===== */
+
+.maintenance-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.maintenance-container h1 {
+    color: #00695C;
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.maintenance-container div {
+    color: #A0A0AB;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto;
 }

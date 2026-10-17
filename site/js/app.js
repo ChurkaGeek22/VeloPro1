@@ -8,13 +8,14 @@ const VeloApp = (function() {
         profilePage: document.getElementById('profilePage'),
         morePage: document.getElementById('morePage'),
         appSectionPage: document.getElementById('appSectionPage'),
-        loginPage: document.getElementById('loginPage')
+        loginPage: document.getElementById('loginPage'),
+        registerPage: document.getElementById('registerPage')
     };
     
     const navItems = document.querySelectorAll('.nav-item');
     
     // Страницы, требующие авторизации
-    const protectedPages = ['profilePage', 'catalogPage', 'appSectionPage'];
+    const protectedPages = ['profilePage', 'appSectionPage'];
     
     function init() {
         setupNavigation();
@@ -98,10 +99,6 @@ const VeloApp = (function() {
         
         if (appSectionMenu) {
             appSectionMenu.addEventListener('click', () => {
-                if (!VeloStorage.isAuthenticated()) {
-                    navigateTo('loginPage');
-                    return;
-                }
                 navigateTo('appSectionPage');
                 loadAppVersions();
             });
@@ -115,10 +112,6 @@ const VeloApp = (function() {
         
         if (downloadApkBtn) {
             downloadApkBtn.addEventListener('click', async () => {
-                if (!VeloStorage.isAuthenticated()) {
-                    navigateTo('loginPage');
-                    return;
-                }
                 downloadApkBtn.disabled = true;
                 downloadApkBtn.textContent = 'Загрузка...';
                 downloadStatus.textContent = '';
@@ -235,6 +228,78 @@ const VeloApp = (function() {
         
         if (registerLink) {
             registerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('registerPage');
+            });
+        }
+
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const nameInput = document.getElementById('registerName');
+                const phoneInput = document.getElementById('registerPhone');
+                const passwordInput = document.getElementById('registerPassword');
+                const confirmPasswordInput = document.getElementById('registerConfirmPassword');
+                const registerError = document.getElementById('registerError');
+
+                if (!nameInput || !phoneInput || !passwordInput || !confirmPasswordInput) return;
+
+                const name = nameInput.value.trim();
+                const phone = phoneInput.value.trim();
+                const password = passwordInput.value.trim();
+                const confirmPassword = confirmPasswordInput.value.trim();
+
+                if (!name || !phone || !password || !confirmPassword) {
+                    if (registerError) registerError.textContent = 'Заполните все поля';
+                    return;
+                }
+
+                if (!/^8\d{10}$/.test(phone)) {
+                    if (registerError) registerError.textContent = 'Номер должен быть в формате 8XXXXXXXXXX';
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    if (registerError) registerError.textContent = 'Пароли не совпадают';
+                    return;
+                }
+
+                if (password.length < 6) {
+                    if (registerError) registerError.textContent = 'Пароль должен быть не менее 6 символов';
+                    return;
+                }
+
+                try {
+                    const result = await VeloAPI.register({ name, phone, password });
+                    if (result.success) {
+                        VeloStorage.setUserId(result.data.user.id);
+                        VeloStorage.setSessionToken(result.data.token);
+                        updateAuthUI(true, result.data.user);
+                        navigateTo('profilePage');
+                        if (registerError) registerError.textContent = '';
+                        nameInput.value = '';
+                        phoneInput.value = '';
+                        passwordInput.value = '';
+                        confirmPasswordInput.value = '';
+                    }
+                } catch (error) {
+                    if (registerError) registerError.textContent = error.message || 'Ошибка регистрации';
+                }
+            });
+        }
+
+        const backToHomeFromRegister = document.getElementById('backToHomeFromRegister');
+        if (backToHomeFromRegister) {
+            backToHomeFromRegister.addEventListener('click', () => {
+                navigateTo('homePage');
+            });
+        }
+
+        const loginLinkFromRegister = document.getElementById('loginLinkFromRegister');
+        if (loginLinkFromRegister) {
+            loginLinkFromRegister.addEventListener('click', (e) => {
                 e.preventDefault();
                 navigateTo('loginPage');
             });

@@ -122,6 +122,41 @@
                 </div>
             </section>
 
+            <!-- Register Page -->
+            <section class="page hidden" id="registerPage">
+                <div class="page-header">
+                    <button class="back-btn" id="backToHomeFromRegister">‹</button>
+                    <h1>Регистрация</h1>
+                </div>
+                <div class="content-card">
+                    <h2>Создать аккаунт</h2>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label class="form-label">Имя</label>
+                            <input type="text" id="registerName" class="form-input" placeholder="Ваше имя" maxlength="50" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Номер телефона</label>
+                            <input type="tel" id="registerPhone" class="form-input" placeholder="8XXXXXXXXXX" maxlength="11" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" id="registerPassword" class="form-input" placeholder="Придумайте пароль" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Повторите пароль</label>
+                            <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Повторите пароль" />
+                        </div>
+                        <div id="registerError" class="form-error"></div>
+                        <button type="submit" class="btn-primary btn-block" id="submitRegister">Зарегистрироваться</button>
+                    </form>
+                    <div class="form-footer">
+                        <span>Уже есть аккаунт?</span>
+                        <button type="button" class="btn-link" id="loginLinkFromRegister">Войти</button>
+                    </div>
+                </div>
+            </section>
+
             <!-- More Page -->
             <section class="page hidden" id="morePage">
                 <div class="page-header">
