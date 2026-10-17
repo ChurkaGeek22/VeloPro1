@@ -17,12 +17,62 @@ app.use(express.json());
 // Initialize database on startup
 initDb().catch(console.error);
 
+// Middleware: проверка авторизации (Bearer JWT)
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { code: 'UNAUTHORIZED', message: 'Токен авторизации не предоставлен' }
+    });
+  }
+
+  const token = authHeader.substring(7);
+  let decoded;
+  try {
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (e) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { code: 'INVALID_TOKEN', message: 'Недействительный токен' }
+    });
+  }
+
+  // Проверяем, что сессия ещё активна
+  const session = get('SELECT * FROM sessions WHERE token = ? AND expires_at > ?', [token, new Date().toISOString()]);
+  if (!session) {
+    return res.status(401).json({
+      success: false,
+      data: null,
+      error: { code: 'SESSION_EXPIRED', message: 'Сессия истекла' }
+    });
+  }
+
+  req.user = { userId: decoded.userId, phone: decoded.phone };
+  next();
+}
+
+// Middleware: проверка владения пользователем данными (userId в теле или параметрах)
+function requireOwnership(req, res, next) {
+  const userId = req.body.userId || req.query.userId || req.params.userId;
+  if (userId && userId !== req.user.userId) {
+    return res.status(403).json({
+      success: false,
+      data: null,
+      error: { code: 'FORBIDDEN', message: 'Доступ к чужим данным запрещён' }
+    });
+  }
+  next();
+}
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ success: true, data: { status: 'active', service: 'auth' }, error: null });
 });
 
-// POST /api/auth/register — регистрация по номеру телефона
+// POST /api/auth/register — регистрация по номеру телефона (доступна без авторизации)
 app.post('/api/auth/register', async (req, res) => {
   await enqueue(async () => {
     const { phone, password, name } = req.body;
@@ -85,7 +135,7 @@ app.post('/api/auth/register', async (req, res) => {
   });
 });
 
-// POST /api/auth/login — вход по номеру телефона
+// POST /api/auth/login — вход по номеру телефона (доступен без авторизации)
 app.post('/api/auth/login', async (req, res) => {
   await enqueue(async () => {
     const { phone, password } = req.body;
@@ -135,8 +185,8 @@ app.post('/api/auth/login', async (req, res) => {
   });
 });
 
-// POST /api/auth/logout
-app.post('/api/auth/logout', async (req, res) => {
+// POST /api/auth/logout (требует авторизации)
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
   await enqueue(async () => {
     try {
       const authHeader = req.headers.authorization;
@@ -156,54 +206,25 @@ app.post('/api/auth/logout', async (req, res) => {
   });
 });
 
-// GET /api/auth/me
-app.get('/api/auth/me', async (req, res) => {
+// GET /api/auth/me (требует авторизации, возвращает только свои данные)
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
   await enqueue(async () => {
-    try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-          success: false,
-          data: null,
-          error: { code: 'UNAUTHORIZED', message: 'Токен авторизации не предоставлен' }
-        });
-      }
-
-      const token = authHeader.substring(7);
-      let decoded;
-      try {
-        decoded = jwt.verify(token, JWT_SECRET);
-      } catch (e) {
-        return res.status(401).json({
-          success: false,
-          data: null,
-          error: { code: 'INVALID_TOKEN', message: 'Недействительный токен' }
-        });
-      }
-
-      const user = get('SELECT id, phone, name, wallet_balance FROM users WHERE id = ?', [decoded.userId]);
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          data: null,
-          error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' }
-        });
-      }
-
-      return res.json({
-        success: true,
-        data: {
-          user: { id: user.id, phone: user.phone, name: user.name, wallet_balance: user.wallet_balance }
-        },
-        error: null
-      });
-    } catch (error) {
-      return res.status(500).json({
+    const user = get('SELECT id, phone, name, wallet_balance FROM users WHERE id = ?', [req.user.userId]);
+    if (!user) {
+      return res.status(404).json({
         success: false,
         data: null,
-        error: { code: 'INTERNAL_ERROR', message: 'Ошибка сервера' }
+        error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' }
       });
     }
+
+    return res.json({
+      success: true,
+      data: {
+        user: { id: user.id, phone: user.phone, name: user.name, wallet_balance: user.wallet_balance }
+      },
+      error: null
+    });
   });
 });
 
