@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
+
 
 public class PushService extends Service {
 
@@ -37,7 +37,7 @@ public class PushService extends Service {
         Log.d(TAG, "Push notification: " + title + " - " + body);
     }
 
-    @Nullable
+    
     @Override
     public IBinder onBind(Intent intent) {
         return null;

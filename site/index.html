@@ -36,14 +36,15 @@
 
         <!-- Main Content -->
         <main class="app-main">
-            <section class="page" id="homePage">
+            <!-- Home Page -->
+            <section class="page active" id="homePage">
                 <div class="page-header">
                     <h1>Главная</h1>
                 </div>
                 <div class="content-card">
                     <h2>Добро пожаловать в ВелоПРО</h2>
-                    <p>Ваше приложение для велосипедистов. Отслеживайте поездки, стройте маршруты и делитесь достижениями.</p>
-                    <button class="btn-primary btn-block" id="startRideBtn">Начать поездку</button>
+                    <p>Аренда электровелосипедов и ремонт собственных С.И.М-устройств.</p>
+                    <button class="btn-primary btn-block" id="startRideBtn">Арендовать электровел</button>
                 </div>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -52,7 +53,7 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="totalRides">0</div>
-                        <div class="stat-label">поездок</div>
+                        <div class="stat-label">аренд</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value" id="totalTime">0</div>
@@ -61,16 +62,21 @@
                 </div>
             </section>
 
+            <!-- Catalog Page -->
             <section class="page hidden" id="catalogPage">
                 <div class="page-header">
                     <h1>Каталог</h1>
                 </div>
                 <div class="content-card">
-                    <h2>Велосипеды и аксессуары</h2>
-                    <p>Выберите подходящий инвентарь для ваших поездок.</p>
+                    <h2>Электровелосипеды в аренду</h2>
+                    <p>Выберите подходящий электровел для аренды.</p>
+                    <div class="bike-list" id="bikeList">
+                        <!-- Байки загружаются динамически -->
+                    </div>
                 </div>
             </section>
 
+            <!-- Profile Page -->
             <section class="page hidden" id="profilePage">
                 <div class="page-header">
                     <h1>Профиль</h1>
@@ -80,7 +86,8 @@
                         <div class="avatar">U</div>
                         <div class="profile-details">
                             <div class="profile-name" id="profileName">Гость</div>
-                            <div class="profile-email" id="profileEmail">Не авторизован</div>
+                            <div class="profile-phone" id="profilePhone">Не авторизован</div>
+                            <div class="profile-wallet" id="profileWallet">0 ₽</div>
                         </div>
                     </div>
                     <button class="btn-primary btn-block" id="loginBtn">Войти</button>
@@ -88,6 +95,69 @@
                 </div>
             </section>
 
+            <!-- Login Page -->
+            <section class="page hidden" id="loginPage">
+                <div class="page-header">
+                    <button class="back-btn" id="backToHome">‹</button>
+                    <h1>Вход</h1>
+                </div>
+                <div class="content-card">
+                    <h2>Вход в аккаунт</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label class="form-label">Номер телефона</label>
+                            <input type="tel" id="loginPhone" class="form-input" placeholder="8XXXXXXXXXX" maxlength="11" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" id="loginPassword" class="form-input" placeholder="Введите пароль" />
+                        </div>
+                        <div id="loginError" class="form-error"></div>
+                        <button type="submit" class="btn-primary btn-block" id="submitLogin">Войти</button>
+                    </form>
+                    <div class="form-footer">
+                        <span>Нет аккаунта?</span>
+                        <button type="button" class="btn-link" id="registerLink">Зарегистрироваться</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Register Page -->
+            <section class="page hidden" id="registerPage">
+                <div class="page-header">
+                    <button class="back-btn" id="backToHomeFromRegister">‹</button>
+                    <h1>Регистрация</h1>
+                </div>
+                <div class="content-card">
+                    <h2>Создать аккаунт</h2>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label class="form-label">Имя</label>
+                            <input type="text" id="registerName" class="form-input" placeholder="Ваше имя" maxlength="50" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Номер телефона</label>
+                            <input type="tel" id="registerPhone" class="form-input" placeholder="8XXXXXXXXXX" maxlength="11" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" id="registerPassword" class="form-input" placeholder="Придумайте пароль" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Повторите пароль</label>
+                            <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Повторите пароль" />
+                        </div>
+                        <div id="registerError" class="form-error"></div>
+                        <button type="submit" class="btn-primary btn-block" id="submitRegister">Зарегистрироваться</button>
+                    </form>
+                    <div class="form-footer">
+                        <span>Уже есть аккаунт?</span>
+                        <button type="button" class="btn-link" id="loginLinkFromRegister">Войти</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- More Page -->
             <section class="page hidden" id="morePage">
                 <div class="page-header">
                     <h1>Еще</h1>
@@ -140,7 +210,7 @@
                 </div>
                 <div class="content-card">
                     <h2>О приложении</h2>
-                    <p>ВелоПРО - мобильное приложение для велосипедистов. Версия 1.0.1.</p>
+                    <p>ВелоПРО - мобильное приложение для аренды электровелосипедов. Версия 1.0.1.</p>
                     <p>Все обновления доступны через этот раздел.</p>
                 </div>
             </section>
@@ -161,7 +231,7 @@
                 </svg>
                 <span>Каталог</span>
             </a>
-            <a href="#" class="nav-item" data-page="profilePage">
+            <a href="#" class="nav-item" id="navProfile" data-page="profilePage">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>

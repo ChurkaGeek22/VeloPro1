@@ -4,4 +4,19 @@
     <string name="app_section">Приложение</string>
     <string name="more_section">Еще</string>
     <string name="service_unavailable">Сервис временно недоступен</string>
+
+    <string name="no_internet_title">Нет интернета</string>
+    <string name="no_internet_desc">Не удалось подключиться к странице. Проверьте Wi-Fi или мобильные данные и попробуйте снова.</string>
+    <string name="btn_retry">Повторить попытку</string>
+    <string name="btn_settings">Настройки</string>
+    <string name="btn_back">Назад</string>
+    <string name="first_run_title">Настройка стартовой страницы</string>
+    <string name="first_run_hint">Введите адрес сайта (например: http://localhost:3000)</string>
+    <string name="btn_save_start">Сохранить и открыть</string>
+    <string name="settings_title">Настройки WebApp</string>
+    <string name="settings_url_label">Стартовый URL:</string>
+    <string name="settings_cache_label">Кэширование данных страницы</string>
+    <string name="btn_clear_cache">Очистить кэш WebView</string>
+    <string name="cache_cleared_msg">Кэш успешно очищен</string>
+    <string name="invalid_url_msg">Пожалуйста, введите корректный URL</string>
 </resources>
